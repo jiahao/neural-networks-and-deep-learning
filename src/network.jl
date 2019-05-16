@@ -64,11 +64,6 @@ function SGD!(N::Network{T},
               epochs::Int, mini_batch_size::Int, η::T,
               test_data=nothing) where T
 
-    have_test_data = test_data != nothing
-    if have_test_data
-        n_test = length(test_data)
-    end
-
     n = length(training_data)
     for j in 1:epochs
         shuffle!(training_data)
@@ -78,12 +73,17 @@ function SGD!(N::Network{T},
             update_mini_batch!(N, mini_batch, η)
         end
 
-        if have_test_data
-            @printf("Epoch %d: %d / %d\n", j, evaluate(N, test_data), n_test)
-        else
-            @printf("Epoch %d complete\n", j)
-        end
+        print_epoch_status(N, test_data, j)
     end
+end
+
+print_epoch_status(N::Network, test_data::Nothing, j) =
+    println("Epoch ", j, " complete")
+
+function print_epoch_status(N::Network, test_data, j)
+    n_test = length(test_data)
+    score = evaluate(N, test_data)
+    println("Epoch ", j, ": ", score, " / ", n_test)
 end
 
 """Update the network's weights and biases by applying
